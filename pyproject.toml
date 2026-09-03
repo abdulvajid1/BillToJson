@@ -7,7 +7,13 @@ authors = [
     { name = "abdulvajid1", email = "vajidca444@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "accelerate>=1.14.0",
+    "pillow>=12.3.0",
+    "torch>=2.14.0",
+    "torchvision>=0.29.0",
+    "transformers>=5.16.1",
+]
 
 [project.scripts]
 billstojson = "billstojson:main"
