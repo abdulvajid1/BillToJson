@@ -1,22 +1,22 @@
 import torch
 from PIL import Image
 from transformers.image_utils import load_image
+from transformers import AutoProcessor, AutoModelForMultimodalLM
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 class HuggingFaceVLMModel:
-    def __init__(self, model_name:str="HuggingFaceTB/SmolVLM-256M-Instruct"):
-        from transformers import AutoProcessor, AutoModelForMultimodalLM
-        self.processor = AutoProcessor.from_pretrained("HuggingFaceTB/SmolVLM-256M-Instruct")
-        self.model = AutoModelForMultimodalLM.from_pretrained("HuggingFaceTB/SmolVLM-256M-Instruct", device_map="auto")        
+    def __init__(self, hf_model_name:str="HuggingFaceTB/SmolVLM-256M-Instruct"):
+        self.processor = AutoProcessor.from_pretrained(hf_model_name)
+        self.model = AutoModelForMultimodalLM.from_pretrained(hf_model_name, device_map="auto")        
     
     def predict(self, inputs):
         outputs = self.model.generate(**inputs, max_new_tokens=40)
         return self.processor.decode(outputs[0][inputs["input_ids"].shape[-1]:])
     
     def process_input(self,
-                      image: Image, 
-                      SYSTEM_PROMPT:str = "Extract the text content in the image in markdown format"):
+                      image, 
+                      SYSTEM_PROMPT:str = f"Extract the Title and Total amount of the bill/price from the picture in json format \n\n Eg: {{title: str, total_amount: int}}"):
         
         messages = [
             {
@@ -45,14 +45,18 @@ class HuggingFaceVLMModel:
 
 
 if __name__ == "__main__":
+    import os
     from pathlib import Path
-    model = HuggingFaceVLMModel('HuggingFaceTB/SmolVLM-256M-Instruct')
-    img = Path("src/billstojson/data/eval").glob("*.jpeg")
-    for i in img:
-        print(i.as_posix())
-        break
+    import random
     
-    img = load_image(i.as_posix())
+    model = HuggingFaceVLMModel('HuggingFaceTB/SmolVLM-256M-Instruct')
+    img_path = os.path.join('src', 'billstojson', 'data', 'eval')
+    images = [os.path.join(img_path, img_file) for img_file in os.listdir(img_path)]
+    
+    random_pick_image = random.choice(images)
+    print(random_pick_image)
+    
+    img = load_image(random_pick_image)
     inputs = model.process_input(img)
     print(model.predict(inputs))
     print("Successfull")
